@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  address        String   @unique
+  chainId        String
+  email          String   @unique
+  nickname       String   // 닉네임
+  universityName String   // 학교명
+  collegeName    String   // 단과대학명
+  degreeType     Degree   // 학위 종류
+  departmentName String   // 학과 이름
+  createdAt      DateTime @default(now())
+  modifiedAt     DateTime @updatedAt
+  status         Boolean  @default(true)
+}
+
+enum Degree {
+  BACHELOR     // 학사
+  MASTER       // 석사
+  DOCTOR       // 박사
+  ASSOCIATE    // 전문학사
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+}
