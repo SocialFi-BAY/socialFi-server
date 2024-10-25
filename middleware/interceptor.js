@@ -1,10 +1,21 @@
 const {thirdwebAuth} = require("../index");
 
 const verifyToken = async (req, res, next) => {
-    const openPaths = ['/api/auth/login', '/api/auth/register'];
+    const openRoutes = {
+        'POST': [
+            '/api/auth/login',
+            '/api/auth/register',
+            '/api/auth/verification-code',
+            '/api/auth/verification-code/check',
+        ],
+        'GET': ['/api/auth/isLoggedIn'] // 특정 GET 요청 허용
+    };
 
-    // 인증이 필요 없는 경로라면 다음 미들웨어로 진행
-    if (openPaths.includes(req.path)) {
+    const currentMethod = req.method;
+    const currentPath = req.path;
+
+    // 해당 메서드에서 인증이 필요 없는 경로라면 다음 미들웨어로 진행
+    if (openRoutes[currentMethod]?.includes(currentPath)) {
         return next();
     }
 
@@ -25,7 +36,7 @@ const verifyToken = async (req, res, next) => {
             return res.status(401).send({message: 'Invalid access token'});
         }
 
-        next();
+        next(); // 인증 성공 시 다음 미들웨어로 진행
     } catch (error) {
         console.error('Token verification failed:', error);
         return res.status(403).send('Failed to verify access token');

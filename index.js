@@ -4,7 +4,16 @@ const cors = require('cors');
 var morgan = require('morgan');
 var bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const nodemailer = require('nodemailer');
 
+// Nodemailer 설정
+module.exports.transporter = nodemailer.createTransport({
+    service: process.env.EMAIL_SERVICE,
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+    },
+});
 require('dotenv').config();
 
 const {createAuth, VerifyLoginPayloadParams} = require('thirdweb/auth');
@@ -26,9 +35,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(
     cors({
-        origin: `${
-            process.env.NODE_ENV === "development" ? "http" : "https"
-        }://${process.env.CLIENT_DOMAIN}`,
+        origin: `${process.env.NODE_ENV === "development" ? "http" : "https"}: ${process.env.CLIENT_DOMAIN}`,
         credentials: true,
     })
 );

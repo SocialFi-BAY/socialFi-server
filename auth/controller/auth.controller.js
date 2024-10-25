@@ -1,4 +1,4 @@
-const service = require('../service');
+const service = require('../service/auth.service');
 const {validationResult} = require('express-validator');
 // 지갑 연결을 위한 서명 요청
 const getLogin = async (req, res) => {
@@ -31,7 +31,6 @@ const postLogin = async (req, res) => {
 
         const jwt = await service.generateJWT(verifiedPayload.payload);
 
-        // res.setHeader('Authorization', `Bearer ${jwt}`);
         res.setHeader('Authorization', `Bearer ${jwt}`);
         return res.status(200).send({message: 'Login successful'});
     }
