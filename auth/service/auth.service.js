@@ -48,7 +48,7 @@ const findUserByAddress = (address) => {
 };
 
 const generateAccessToken = (address) => {
-    return jwt.sign(address, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+    return jwt.sign(address, ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 };
 const generateRefreshToken = (address) => {
     return jwt.sign(address, REFRESH_TOKEN_SECRET);
