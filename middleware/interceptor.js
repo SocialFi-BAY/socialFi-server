@@ -1,4 +1,6 @@
 const {thirdwebAuth} = require("../index");
+const jwt = require("jsonwebtoken");
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 
 const verifyToken = async (req, res, next) => {
     const openRoutes = {
@@ -7,8 +9,9 @@ const verifyToken = async (req, res, next) => {
             '/api/auth/register',
             '/api/auth/verification-code',
             '/api/auth/verification-code/check',
+            '/api/auth/refresh'
         ],
-        'GET': ['/api/auth/isLoggedIn'] // 특정 GET 요청 허용
+        'GET': ['/api/auth/isLoggedIn', '/api/auth/login'] // 특정 GET 요청 허용
     };
 
     const currentMethod = req.method;
@@ -29,13 +32,13 @@ const verifyToken = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const authResult = await thirdwebAuth.verifyJWT({jwt: token});
+        const address = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-        // JWT가 유효하지 않은 경우 401 반환
-        if (!authResult.valid) {
-            return res.status(401).send({message: 'Invalid access token'});
-        }
+        // req.user가 정의되지 않은 경우 초기화
+        req.user = req.user || {};
 
+        // req.user에 address를 저장
+        req.user.address = address;
         next(); // 인증 성공 시 다음 미들웨어로 진행
     } catch (error) {
         console.error('Token verification failed:', error);
