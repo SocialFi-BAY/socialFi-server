@@ -9,6 +9,7 @@ router.get('/login', authController.getLogin);
 router.post('/register', registerValidationRules, authController.register);
 router.get('/isLoggedIn', authController.isLoggedIn);
 router.post('/login', authController.postLogin);
+router.post('/refresh', authController.refresh);
 
 // Email Verification Routes
 router.post('/verification-code', emailController.sendVerificationCode);
