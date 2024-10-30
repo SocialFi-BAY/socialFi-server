@@ -1,41 +1,33 @@
 const service = require('../service/auth.service');
 const {validationResult} = require('express-validator');
+
 // 지갑 연결을 위한 서명 요청
 const getLogin = async (req, res) => {
     const address = req.query.address;
     const chainId = req.query.chainId;
 
-
     if (typeof address !== 'string') {
         return res.status(400).send('Address is required');
     }
 
-    const payload = await service.generateLoginPayload(address, chainId);
+    const payload = await service.generatePayload(address, chainId);
     return res.send(payload);
 };
 
 // 로그인 처리 및 JWT 발급
 const postLogin = async (req, res) => {
-    const payload = req.body;
-    const verifiedPayload = await service.verifyPayload(payload);
+    try {
+        const tokens = await service.postLogin(req.body);
 
-    if (verifiedPayload.valid) {
-        const {address} = verifiedPayload.payload;
-
-        const user = await service.findUserByAddress(address);
-        if (!user) {
-            return res.status(404).send({message: 'User not found'});
-        }
-        const refreshToken = service.generateRefreshToken({address});
-        await service.storeRefreshToken(user.id, refreshToken);
-
-        const jwt = await service.generateJWT(verifiedPayload.payload);
-
-        res.setHeader('Authorization', `Bearer ${jwt}`);
-        return res.status(200).send({message: 'Login successful'});
+        res.setHeader('Authorization', `Bearer ${tokens.accessToken}`);
+        return res.status(200).json({
+            message: 'Login successful',
+            refreshToken: tokens.refreshToken,
+        });
+    } catch (error) {
+        const statusCode = error.message === 'User not found' ? 404 : 400;
+        return res.status(statusCode).json({message: error.message});
     }
-
-    return res.status(400).send('Failed to login');
 };
 
 // 로그인 되었는지 확인
@@ -59,4 +51,30 @@ const register = async (req, res) => {
     }
 };
 
-module.exports = {getLogin, postLogin, isLoggedIn, register};
+// Refresh Token을 이용한 Access Token 갱신
+const refresh = async (req, res) => {
+    const {refreshToken} = req.body;
+
+    if (!refreshToken) {
+        return res.status(400).json({message: 'Refresh token is required'});
+    }
+
+    try {
+        const {address, valid} = await service.verifyRefreshToken(refreshToken);
+
+        if (!valid) {
+            return res.status(404).json({message: 'Invalid refresh token'});
+        }
+        const {newAccessToken, newRefreshToken} = await service.updateRefreshToken(address);
+
+        return res.status(200).json({
+            message: 'Tokens refreshed successfully',
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.status(401).json({message: 'Invalid refresh token', error: error.message});
+    }
+};
+module.exports = {getLogin, postLogin, isLoggedIn, register, refresh};
