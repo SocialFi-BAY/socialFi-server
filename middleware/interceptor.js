@@ -32,13 +32,12 @@ const verifyToken = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const address = jwt.verify(token, ACCESS_TOKEN_SECRET);
+        const userId = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-        // req.user가 정의되지 않은 경우 초기화
         req.user = req.user || {};
 
-        // req.user에 address를 저장
-        req.user.address = address;
+        req.user.userId = userId.address;
+
         next(); // 인증 성공 시 다음 미들웨어로 진행
     } catch (error) {
         console.error('Token verification failed:', error);

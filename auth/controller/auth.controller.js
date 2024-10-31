@@ -1,4 +1,4 @@
-const { validationResult } = require('express-validator');
+const {validationResult} = require('express-validator');
 const authService = require('../service/auth.service');
 
 class AuthController {
@@ -25,7 +25,7 @@ class AuthController {
             });
         } catch (error) {
             const statusCode = error.message === 'User not found' ? 404 : 400;
-            return res.status(statusCode).json({ message: error.message });
+            return res.status(statusCode).json({message: error.message});
         }
     }
 
@@ -36,31 +36,31 @@ class AuthController {
     async register(req, res) {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
+            return res.status(400).json({message: 'Validation failed', errors: errors.array()});
         }
 
         try {
             const user = await authService.createUser(req.body);
-            return res.status(201).json({ message: 'User registered successfully', user });
+            return res.status(201).json({message: 'User registered successfully', user});
         } catch (error) {
-            res.status(400).json({ message: 'Registration failed', error: error.message });
+            res.status(400).json({message: 'Registration failed', error: error.message});
         }
     }
 
     async refresh(req, res) {
-        const { refreshToken } = req.body;
+        const {refreshToken} = req.body;
 
         if (!refreshToken) {
-            return res.status(400).json({ message: 'Refresh token is required' });
+            return res.status(400).json({message: 'Refresh token is required'});
         }
 
         try {
-            const { address, valid } = await authService.verifyRefreshToken(refreshToken);
+            const {data, valid} = await authService.verifyRefreshToken(refreshToken);
 
             if (!valid) {
-                return res.status(404).json({ message: 'Invalid refresh token' });
+                return res.status(404).json({message: 'Invalid refresh token'});
             }
-            const { newAccessToken, newRefreshToken } = await authService.updateRefreshToken(address);
+            const {newAccessToken, newRefreshToken} = await authService.updateRefreshToken(data.address);
 
             return res.status(200).json({
                 message: 'Tokens refreshed successfully',
@@ -69,7 +69,7 @@ class AuthController {
             });
         } catch (error) {
             console.log(error.message);
-            return res.status(401).json({ message: 'Invalid refresh token', error: error.message });
+            return res.status(401).json({message: 'Invalid refresh token', error: error.message});
         }
     }
 }

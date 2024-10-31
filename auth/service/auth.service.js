@@ -1,5 +1,5 @@
-const { thirdwebAuth } = require('../../index');
-const { PrismaClient } = require('@prisma/client');
+const {thirdwebAuth} = require('../../index');
+const {PrismaClient} = require('@prisma/client');
 const jwt = require('jsonwebtoken');
 
 const prisma = new PrismaClient();
@@ -22,7 +22,7 @@ class AuthService {
             throw new Error('Invalid payload');
         }
 
-        const { address } = verifiedPayload.payload;
+        const {address} = verifiedPayload.payload;
 
         // 사용자 조회
         const user = await this.findUserByAddress(address);
@@ -30,8 +30,8 @@ class AuthService {
             throw new Error('User not found');
         }
 
-        const accessToken = this.generateAccessToken(address);
-        const refreshToken = this.generateRefreshToken(address);
+        const accessToken = this.generateAccessToken(user.id);
+        const refreshToken = this.generateRefreshToken(user.id);
 
         // Refresh Token 저장
         await this.storeRefreshToken(user.id, refreshToken);
@@ -43,15 +43,19 @@ class AuthService {
     }
 
     async findUserByAddress(address) {
-        return prisma.user.findUnique({ where: { address } });
+        return prisma.user.findUnique({where: {address}});
     }
 
-    generateAccessToken(address) {
-        return jwt.sign(address, ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    async findUserById(userId) {
+        return prisma.user.findUnique({where: {id: userId}});
     }
 
-    generateRefreshToken(address) {
-        return jwt.sign(address, REFRESH_TOKEN_SECRET);
+    generateAccessToken(userId) {
+        return jwt.sign({userId}, ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
+    }
+
+    generateRefreshToken(userId) {
+        return jwt.sign({userId}, REFRESH_TOKEN_SECRET);
     }
 
     async verifyAccessToken(token) {
@@ -75,11 +79,11 @@ class AuthService {
 
     async verifyRefreshToken(refreshToken) {
         try {
-            const address = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+            const data = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
             // 토큰에서 필요한 데이터 반환
             return {
                 valid: true,
-                address,
+                data,
             };
         } catch (error) {
             return {
@@ -91,24 +95,25 @@ class AuthService {
 
     async storeRefreshToken(userId, refreshToken) {
         return prisma.refreshToken.upsert({
-            where: { userId },
-            update: { token: refreshToken },
-            create: { token: refreshToken, userId },
+            where: {userId},
+            update: {token: refreshToken},
+            create: {token: refreshToken, userId},
         });
     }
 
-    async updateRefreshToken(address) {
-        const user = await this.findUserByAddress(address);
+    async updateRefreshToken(userId) {
+        const user = await this.findUserById(userId);
         if (!user) {
             throw new Error('User not found');
         }
 
-        const newAccessToken = this.generateAccessToken(address);
-        const newRefreshToken = this.generateRefreshToken(address);
+        const newAccessToken = this.generateAccessToken(userId);
+        const newRefreshToken = this.generateRefreshToken(userId);
 
-        await this.storeRefreshToken(user.id, newRefreshToken);
+        // Refresh Token 저장
+        await this.storeRefreshToken(userId, newRefreshToken);
 
-        return { newAccessToken, newRefreshToken };
+        return {newAccessToken, newRefreshToken};
     }
 
     async createUser(data) {
