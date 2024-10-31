@@ -19,21 +19,21 @@ model User {
   address        String   @unique
   chainId        String
   email          String   @unique
-  nickname       String   // 닉네임
-  universityName String   // 학교명
-  collegeName    String   // 단과대학명
-  degreeType     Degree   // 학위 종류
-  departmentName String   // 학과 이름
+  nickname       String // 닉네임
+  universityName String // 학교명
+  collegeName    String // 단과대학명
+  degreeType     Degree // 학위 종류
+  departmentName String // 학과 이름
   createdAt      DateTime @default(now())
   modifiedAt     DateTime @updatedAt
   status         Boolean  @default(true)
 }
 
 enum Degree {
-  BACHELOR     // 학사
-  MASTER       // 석사
-  DOCTOR       // 박사
-  ASSOCIATE    // 전문학사
+  BACHELOR // 학사
+  MASTER // 석사
+  DOCTOR // 박사
+  ASSOCIATE // 전문학사
 }
 
 model RefreshToken {
@@ -45,8 +45,66 @@ model RefreshToken {
 
 model VerificationCode {
   id        Int      @id @default(autoincrement())
-  email     String    @unique
+  email     String   @unique
   code      String
   expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+enum TargetType {
+  POST
+  COMMENT
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+  SCRAP
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  title     String
+  content   String
+  photos    Photo[]
+  comments  Comment[] @relation("ParentComments")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  status    Boolean   @default(true)
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  userId    Int // 댓글 작성자
+  content   String
+  parentId  Int? // 부모 댓글 ID
+  parent    Comment?  @relation("childrenComments", fields: [parentId], references: [id])
+  children  Comment[] @relation("childrenComments")
+  postId    Int? // 게시글 ID (최상위 댓글에만 설정)
+  post      Post?     @relation("ParentComments", fields: [postId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  status    Boolean   @default(true)
+}
+
+model Reaction {
+  id           Int          @id @default(autoincrement())
+  targetType   TargetType // POST 또는 COMMENT
+  targetId     Int // 게시글 또는 댓글의 ID
+  reactionType ReactionType // LIKE, DISLIKE, SCRAP 중 하나
+  userId       Int // 리액션을 남긴 사용자 ID
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  status       Boolean      @default(true)
+
+  @@unique([targetId, targetType, reactionType, userId]) // 중복 리액션 방지
+}
+
+model Photo {
+  id        Int      @id @default(autoincrement())
+  url       String // 사진 URL
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
