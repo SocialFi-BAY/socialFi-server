@@ -1,4 +1,4 @@
-const {thirdwebAuth} = require('../../index');
+const {thirdwebAuth} = require('../../../index');
 const {PrismaClient} = require('@prisma/client');
 const jwt = require('jsonwebtoken');
 
@@ -47,6 +47,7 @@ class AuthService {
     }
 
     async findUserById(userId) {
+        console.log(userId)
         return prisma.user.findUnique({where: {id: userId}});
     }
 

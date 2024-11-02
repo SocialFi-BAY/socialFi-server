@@ -60,7 +60,7 @@ class AuthController {
             if (!valid) {
                 return res.status(404).json({message: 'Invalid refresh token'});
             }
-            const {newAccessToken, newRefreshToken} = await authService.updateRefreshToken(data.address);
+            const {newAccessToken, newRefreshToken} = await authService.updateRefreshToken(parseInt(data));
 
             return res.status(200).json({
                 message: 'Tokens refreshed successfully',

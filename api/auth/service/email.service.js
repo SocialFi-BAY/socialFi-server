@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const crypto = require('crypto');
-const transporter = require('../../index');
+const transporter = require('../../../index');
 const prisma = new PrismaClient();
 
 class EmailService {

@@ -40,8 +40,8 @@ app.use(
         credentials: true,
     })
 );
-const auth = require('./auth/route');
-const post = require('./post/route');
+const auth = require('./api/auth/route');
+const post = require('./api/post/route');
 
 const verifyToken = require('./middleware/interceptor');
 
