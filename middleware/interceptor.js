@@ -31,11 +31,11 @@ const verifyToken = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const userId = jwt.verify(token, ACCESS_TOKEN_SECRET);
+        const data = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
         req.user = req.user || {};
 
-        req.user.userId = userId.address;
+        req.user.userId = data.userId;
 
         next(); // 인증 성공 시 다음 미들웨어로 진행
     } catch (error) {
