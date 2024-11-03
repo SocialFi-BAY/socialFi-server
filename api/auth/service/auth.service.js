@@ -52,26 +52,11 @@ class AuthService {
     }
 
     generateAccessToken(userId) {
-        return jwt.sign({userId}, ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
+        return jwt.sign({userId}, ACCESS_TOKEN_SECRET, {expiresIn: '1d'});
     }
 
     generateRefreshToken(userId) {
         return jwt.sign({userId}, REFRESH_TOKEN_SECRET);
-    }
-
-    async verifyAccessToken(token) {
-        try {
-            const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-            return {
-                valid: true,
-                address: decoded.address,
-            };
-        } catch (error) {
-            return {
-                valid: false,
-                message: 'Invalid or expired access token',
-            };
-        }
     }
 
     async verifyPayload(payload) {
