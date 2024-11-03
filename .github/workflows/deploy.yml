@@ -1,0 +1,66 @@
+name: Deploy to cloudtype
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Connect deploy key
+        uses: cloudtype-github-actions/connect@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          ghtoken: ${{ secrets.GHP_TOKEN }}
+      - name: Deploy
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: kkj6235/social-fi
+          stage: main
+          yaml: |
+            name: socialfi-server
+            app: node@20
+            options:
+              ports: "8080"
+              install: npm i
+              env:
+                - name: DATABASE_URL
+                  value: ${{ secrets.DATABASE_URL }}
+                - name: DIRECT_URL
+                  value: ${{ secrets.DIRECT_URL }}
+                - name: ACCESS_TOKEN_SECRET
+                  value: ${{ secrets.ACCESS_TOKEN_SECRET }}
+                - name: REFRESH_TOKEN_SECRET
+                  value: ${{ secrets.REFRESH_TOKEN_SECRET }}
+                - name: THIRDWEB_SECRET_KEY
+                  value: ${{ secrets.THIRDWEB_SECRET_KEY }}
+                - name: CLIENT_DOMAIN
+                  value: ${{ secrets.CLIENT_DOMAIN }}
+                - name: ADMIN_PRIVATE_KEY
+                  value: ${{ secrets.ADMIN_PRIVATE_KEY }}
+                - name: NODE_ENV
+                  value: ${{ secrets.NODE_ENV }}
+                - name: EMAIL_SERVICE
+                  value: ${{ secrets.EMAIL_SERVICE }}
+                - name: EMAIL_USER
+                  value: ${{ secrets.EMAIL_USER }}
+                - name: EMAIL_PASSWORD
+                  value: ${{ secrets.EMAIL_PASSWORD }}
+                - name: SUPABASE_URL
+                  value: ${{ secrets.SUPABASE_URL }}
+                - name: SUPABASE_SERVICE_KEY
+                  value: ${{ secrets.SUPABASE_SERVICE_KEY }}
+                - name: BUCKET_NAME
+                  value: ${{ secrets.BUCKET_NAME }}
+                - name: FILE_EXPIRES_IN
+                  value: ${{ secrets.FILE_EXPIRES_IN }}
+              buildenv: []
+              build: npx prisma generate
+              start: node index.js
+            context:
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
