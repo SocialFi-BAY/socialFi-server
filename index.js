@@ -43,6 +43,7 @@ app.use(
 const auth = require('./api/auth/route');
 const post = require('./api/post/route');
 const reaction = require('./api/reaction/route');
+const comment = require('./api/comment/route');
 
 const verifyToken = require('./middleware/interceptor');
 
@@ -50,6 +51,7 @@ app.use(verifyToken);
 app.use('/api/auth', auth);
 app.use('/api/posts', post);
 app.use('/api/reactions', reaction);
+app.use('/api/comments', comment);
 
 
 // 서버 실행

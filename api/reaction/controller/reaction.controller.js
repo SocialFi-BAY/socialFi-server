@@ -2,6 +2,7 @@ const reactionService = require('../service/reaction.service');
 
 class ReactionController {
 
+
     async createReaction(req, res) {
         const { targetType, targetId, reactionType } = req.body;
         const userId = req.user.userId;
@@ -13,7 +14,7 @@ class ReactionController {
                 reactionType,
                 userId,
             });
-            res.json(reaction);
+            res.status(201).json(reaction);
         } catch (error) {
             console.error('Error creating reaction:', error);
             res.status(500).json({ error: error.message });
