@@ -22,7 +22,8 @@ class PostController {
     async getPostById(req, res) {
         try {
             const {id} = req.params;
-            const post = await postService.getPostById(id);
+            const userId = req.user.userId;
+            const post = await postService.getPostById(parseInt(id), userId);
             res.status(200).json(post);
         } catch (error) {
             const statusCode = error.status || 500;

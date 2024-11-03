@@ -23,25 +23,64 @@ class PostService {
         return new PostResponse(post);
     }
 
-    async getPostById(id) {
+    async getPostById(postId,userId) {
+
         const post = await prisma.post.findUnique({
-            where: {
-                id: Number(id),
-                status: true
-            },
+            where: { id: postId, status: true },
             include: {
                 photos: true,
-                comments: true
-            }
+                comments: {
+                    where: { status: true },
+                    include: {
+                        children: { where: { status: true } },
+                    },
+                },
+            },
         });
 
         if (!post) {
-            const error = new Error('Post not found');
-            error.status = 404;
-            throw error;
+            throw new Error("Post not found or inactive");
         }
 
-        return post;
+// groupBy와 findMany로 리액션 수와 사용자 리액션을 한 번에 가져오기
+        const reactionsData = await prisma.reaction.groupBy({
+            by: ['reactionType'],
+            where: {
+                targetType: 'POST',
+                targetId: post.id,
+                status: true,
+            },
+            _count: { reactionType: true },
+        });
+
+        const userReactions = await prisma.reaction.findMany({
+            where: {
+                targetType: 'POST',
+                targetId: post.id,
+                userId: userId,
+                status: true,
+            },
+            select: {
+                reactionType: true,
+            },
+        });
+
+// 리액션 수 집계
+        const reactionCounts = {
+            likeCount: reactionsData.find(r => r.reactionType === 'LIKE')?._count?.reactionType || 0,
+            dislikeCount: reactionsData.find(r => r.reactionType === 'DISLIKE')?._count?.reactionType || 0,
+            scrapCount: reactionsData.find(r => r.reactionType === 'SCRAP')?._count?.reactionType || 0,
+        };
+
+// 사용자 리액션 여부
+        const userReactionsMap = {
+            isLiked: userReactions.some(r => r.reactionType === 'LIKE'),
+            isDisliked: userReactions.some(r => r.reactionType === 'DISLIKE'),
+            isScrapped: userReactions.some(r => r.reactionType === 'SCRAP'),
+        };
+
+// PostResponse 생성
+        return new PostResponse(post, reactionCounts, userReactionsMap);
     }
 
     async updatePost(id, userId, {title, content, photos}) {
